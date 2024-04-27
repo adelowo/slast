@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.24;
+pragma solidity >=0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract DepositPool {
+contract Pool {
     uint256 public feePercentage;
 
     struct BalanceInfo {
@@ -15,11 +15,11 @@ contract DepositPool {
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER
-    const DEAD_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    const DEAD_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 
     // user balance ==> toekn address ==> balance
     // 0x000000000000000000000000000000000000dEaD will be used for ETH
-    mapping(address => mappings(address => uint256)) userHoldings;
+    mapping(address => mapping(address => uint256)) private userHoldings;
 
     event Deposit(address indexed fromfrom, address indexed token, uint256 amount);
 
