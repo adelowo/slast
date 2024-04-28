@@ -28,18 +28,31 @@ contract Pool {
         feePercentage = _feePercentage;
     }
 
+    function supply(address tokenAddress, uint256 amount) public {
+
+      if (tokenAddress != DEAD_ADDRESS) {
+        IERC20(tokenAddress).transferFrom(msg.sender,address(this),amount);
+      }
+
+      userHoldings[msg.sender][tokenAddress] += amount;
+
+      emit Deposit(msg.sender,tokenAddress,amount);
+    }
 
 
     function depositNativeToken() public payable {
-      userHoldings[msg.sender][DEAD_ADDRESS] += msg.value;
-      emit Deposit(msg.sender,DEAD_ADDRESS,msg.value);
+      supply(DEAD_ADDRESS, msg.value);
     }
 
     function getFee() external view returns (uint256) {
       return feePercentage;
     }
 
+    function balanceOf(address tokenAddress) public view returns (uint256) {
+      return userHoldings[msg.sender][tokenAddress];
+    }
+
     function getNativeTokenBalance() public view returns (uint256)  {
-      return userHoldings[msg.sender][DEAD_ADDRESS];
+      return balanceOf(DEAD_ADDRESS);
     }
 }
