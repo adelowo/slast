@@ -5,6 +5,8 @@ pragma solidity >=0.8.23;
 import "../interfaces/Vault.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+event NewSupportedToken(address indexed asset);
+
 contract Aave is Vault, Ownable(msg.sender) {
 
   struct Asset {
@@ -20,7 +22,6 @@ contract Aave is Vault, Ownable(msg.sender) {
 
   mapping(address => bool) private checkList;
 
-  event NewSupportedToken(address indexed asset);
 
   function addSupportedAsset(address asset) public onlyOwner {
     require(!checkList[asset], "This asset was previously added");

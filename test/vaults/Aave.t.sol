@@ -28,4 +28,29 @@ contract AaveTest is Test {
 
     vm.stopPrank(); 
   }
+
+  function test_assetCanBeAdded() public {
+    vm.expectEmit(true,true,true,true,address(aaveVault));
+    emit NewSupportedToken(usdcAddress);
+
+    aaveVault.addSupportedAsset(usdcAddress);
+  }
+
+
+  function test_assetCannotBeAddedMultipleTimes() public {
+    vm.expectEmit(true,true,true,true,address(aaveVault));
+    emit NewSupportedToken(usdcAddress);
+
+    aaveVault.addSupportedAsset(usdcAddress);
+
+    // add the same asset again
+    // this should fail
+    vm.expectRevert(bytes("This asset was previously added"));
+    aaveVault.addSupportedAsset(usdcAddress);
+
+
+    // add a new different asset. 
+    // make sure it passes
+    aaveVault.addSupportedAsset(0x6B175474E89094C44Da98b954EedeAC495271d0F);
+  }
 }
