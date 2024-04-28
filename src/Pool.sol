@@ -12,7 +12,7 @@ contract Pool {
         uint256 amount;
     }
 
-    mapping(address => HoldingsInfo) balanceMappings;
+    mapping(address => HoldingsInfo) private balanceMappings;
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER

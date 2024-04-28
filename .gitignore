@@ -1,6 +1,7 @@
 # Compiler files
 cache/
 out/
+*.sh
 
 # Ignores development broadcast logs
 !/broadcast
