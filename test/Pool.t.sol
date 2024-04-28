@@ -76,6 +76,8 @@ contract PoolTest is Test {
 
     // since we have drawn everything off
     assertEq(testToken.balanceOf(testAddress),0);
+
+    // make sure the contract has the correct and expected amount
     assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
   }
 }
