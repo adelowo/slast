@@ -1,52 +1,58 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.24;
+pragma solidity >=0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract DepositPool {
+import {console} from "forge-std/Test.sol";
+
+contract Pool {
     uint256 public feePercentage;
 
-    struct BalanceInfo {
+    struct HoldingsInfo {
         uint256 amount;
-        address tokenAddress;
     }
 
-    mapping(address => BalanceInfo) balanceMappings;
+    mapping(address => HoldingsInfo) balanceMappings;
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER
-    const DEAD_ADDRESS = "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    address private constant DEAD_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     // user balance ==> toekn address ==> balance
     // 0x000000000000000000000000000000000000dEaD will be used for ETH
-    mapping(address => mappings(address => uint256)) userHoldings;
+    mapping(address => mapping(address => uint256)) private userHoldings;
 
-    event Deposit(address indexed fromfrom, address indexed token, uint256 amount);
+    event Deposit(address indexed from, address indexed token, uint256 amount);
 
     constructor(uint256 _feePercentage) {
         feePercentage = _feePercentage;
     }
 
-    function supply(address token, uint256 amount) external {
-       require(amount <= 0, "Amount must be greater than zero");
+    function supply(address tokenAddress, uint256 amount) public {
 
-        // Transfer tokens from the sender to this contract
-        IERC20(token).transferFrom(msg.sender, address(this), amount);
+      if (tokenAddress != DEAD_ADDRESS) {
+        IERC20(tokenAddress).transferFrom(msg.sender,address(this),amount);
+      }
 
-        // Calculate the amount to withhold
-        uint256 feeAmount = (amount * feePercentage) / 100;
+      userHoldings[msg.sender][tokenAddress] += amount;
 
-        balanceMappings[msg.sender] = UserInfo(feeAmount, token);
-
-        // Emit deposit event
-        emit Deposit(msg.sender, token, amount);
-
-        // Forward the remaining tokens to the address
-        uint256 remainingAmount = amount - feeAmount;
-        IERC20(token).transferFrom(address(this), receiver, remainingAmount);
+      emit Deposit(msg.sender,tokenAddress,amount);
     }
 
-    function deposit() payable {
-        balanceMappings[msg.sender][DEAD_ADDRESS] += msg.value;
+
+    function depositNativeToken() public payable {
+      supply(DEAD_ADDRESS, msg.value);
+    }
+
+    function getFee() external view returns (uint256) {
+      return feePercentage;
+    }
+
+    function balanceOf(address tokenAddress) public view returns (uint256) {
+      return userHoldings[msg.sender][tokenAddress];
+    }
+
+    function getNativeTokenBalance() public view returns (uint256)  {
+      return balanceOf(DEAD_ADDRESS);
     }
 }
