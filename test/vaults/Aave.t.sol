@@ -53,4 +53,27 @@ contract AaveTest is Test {
     // make sure it passes
     aaveVault.addSupportedAsset(0x6B175474E89094C44Da98b954EedeAC495271d0F);
   }
+
+  function test_isSupported() public {
+
+    assertFalse(aaveVault.isSupported(usdcAddress));
+
+    aaveVault.addSupportedAsset(usdcAddress);
+
+    assertTrue(aaveVault.isSupported(usdcAddress));
+  }
+
+
+  function test_pauseAssetSupply() public {
+
+    // add the asset
+    aaveVault.addSupportedAsset(usdcAddress);
+
+
+    // pause the supply for the asset
+    vm.expectEmit(true,true,true,true,address(aaveVault));
+    emit AssetSupplyPaused(usdcAddress);
+
+    aaveVault.pauseAssetSupply(usdcAddress);
+  }
 }

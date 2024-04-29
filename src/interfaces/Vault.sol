@@ -6,4 +6,5 @@ interface Vault {
   function supply(address asset, uint256 amount) external;
   function isSupported(address asset) external returns (bool);
   function addSupportedAsset(address asset) external;
+  function pauseAssetSupply(address asset) external;
 }

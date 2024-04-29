@@ -6,6 +6,7 @@ import "../interfaces/Vault.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 event NewSupportedToken(address indexed asset);
+event AssetSupplyPaused(address indexed asset);
 
 contract Aave is Vault, Ownable(msg.sender) {
 
@@ -22,8 +23,7 @@ contract Aave is Vault, Ownable(msg.sender) {
 
   mapping(address => bool) private checkList;
 
-
-  function addSupportedAsset(address asset) public onlyOwner {
+  function addSupportedAsset(address asset) external onlyOwner {
     require(!checkList[asset], "This asset was previously added");
 
     supportedAssets[asset] = Asset(asset,false);
@@ -36,5 +36,13 @@ contract Aave is Vault, Ownable(msg.sender) {
   }
 
   function isSupported(address asset) external returns (bool) {
+    return checkList[asset];
+  }
+
+  function pauseAssetSupply(address asset) external onlyOwner {
+    require(checkList[asset], "This asset is not currently supported. Add it first");
+
+    supportedAssets[asset].isPaused = true;
+    emit AssetSupplyPaused(asset);
   }
 }
