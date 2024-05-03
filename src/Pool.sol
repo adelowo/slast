@@ -2,10 +2,12 @@
 pragma solidity >=0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import {console} from "forge-std/Test.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "aave-v3-core/contracts/interfaces/Ipool.sol";
+import "./interfaces/Configuration.sol";
 
-contract Pool {
+contract Pool is Ownable(msg.sender) {
     uint256 public feePercentage;
 
     struct HoldingsInfo {
@@ -22,21 +24,38 @@ contract Pool {
     // 0x000000000000000000000000000000000000dEaD will be used for ETH
     mapping(address => mapping(address => uint256)) private userHoldings;
 
+    // we eventually want to support more than the Base chain
+    // at some time in the future. so no need to hardcode
+    IPool _aavePoolAddress;
+
+    Configuration _config;
+
     event Deposit(address indexed from, address indexed token, uint256 amount);
 
-    constructor(uint256 _feePercentage) {
-        feePercentage = _feePercentage;
+    constructor(uint256 _feePercentage, address _aavePool, address _configuration) {
+      require(address(_aavePool) != address(0), "Aave pool vault cannot be a zero address"); 
+      require(address(_configuration) != address(0), "Configurator address cannot be a zero address"); 
+
+      feePercentage = _feePercentage;
+      _aavePoolAddress = IPool(_aavePool);
+      _config = Configuration(_configuration);
     }
 
     function supply(address tokenAddress, uint256 amount) public {
 
       if (tokenAddress != DEAD_ADDRESS) {
-        IERC20(tokenAddress).transferFrom(msg.sender,address(this),amount);
+        IERC20 assetContract = IERC20(tokenAddress);
+        assetContract.transferFrom(msg.sender,address(this),amount);
+
+        // no unlimted allowance to Slast. Only give allowances as needed
+        assetContract.approve(address(_aavePoolAddress), amount);
       }
 
       userHoldings[msg.sender][tokenAddress] += amount;
 
       emit Deposit(msg.sender,tokenAddress,amount);
+
+      _aavePoolAddress.deposit(tokenAddress,amount,address(this),0);
     }
 
 

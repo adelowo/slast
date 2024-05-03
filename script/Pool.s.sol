@@ -9,6 +9,6 @@ contract PoolScript is Script {
 
     function run() public {
         vm.broadcast();
-        new Pool(0);
+        // new Pool(0);
     }
 }

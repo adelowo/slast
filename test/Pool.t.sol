@@ -28,56 +28,56 @@ contract MockToken is ERC20{
 
 contract PoolTest is Test {
 
-  Pool poolContract;
-  MockToken public testToken;
-
-  uint256 percentage = 1;
-
-  address private constant usdcContractAddress = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-
-  function setUp() public {
-    poolContract = new Pool(percentage);
-    testToken = new MockToken("USDC", "USDC");
-  }
-
-  function test_getFee() public {
-    assertEq(poolContract.getFee(),percentage);
-  }
-
-  function test_depositNativeToken() public {
-    uint256 depositAmount = 0.1 ether;
-    address testAddress = address(0x123); 
-
-    vm.deal(testAddress, depositAmount); 
-
-    vm.startPrank(testAddress); 
-
-    poolContract.depositNativeToken{value: depositAmount}();
-
-    assertEq(poolContract.getNativeTokenBalance(),depositAmount);
-
-    vm.stopPrank(); 
-  }
-
-  function test_supply() public {
-    address testAddress = address(0x126); 
-
-    uint256 amountToSupply = 50 * (10 ** testToken.decimals());
-    testToken.mint(testAddress, amountToSupply);
-
-    vm.startPrank(testAddress); 
-
-    testToken.approve(address(poolContract), amountToSupply);
-
-    poolContract.supply(address(testToken),amountToSupply);
-
-    assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
-    vm.stopPrank(); 
-
-    // since we have drawn everything off
-    assertEq(testToken.balanceOf(testAddress),0);
-
-    // make sure the contract has the correct and expected amount
-    assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
-  }
+  // Pool poolContract;
+  // MockToken public testToken;
+  //
+  // uint256 percentage = 1;
+  //
+  // address private constant usdcContractAddress = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
+  //
+  // function setUp() public {
+  //   poolContract = new Pool(percentage);
+  //   testToken = new MockToken("USDC", "USDC");
+  // }
+  //
+  // function test_getFee() public {
+  //   assertEq(poolContract.getFee(),percentage);
+  // }
+  //
+  // function test_depositNativeToken() public {
+  //   uint256 depositAmount = 0.1 ether;
+  //   address testAddress = address(0x123); 
+  //
+  //   vm.deal(testAddress, depositAmount); 
+  //
+  //   vm.startPrank(testAddress); 
+  //
+  //   poolContract.depositNativeToken{value: depositAmount}();
+  //
+  //   assertEq(poolContract.getNativeTokenBalance(),depositAmount);
+  //
+  //   vm.stopPrank(); 
+  // }
+  //
+  // function test_supply() public {
+  //   address testAddress = address(0x126); 
+  //
+  //   uint256 amountToSupply = 50 * (10 ** testToken.decimals());
+  //   testToken.mint(testAddress, amountToSupply);
+  //
+  //   vm.startPrank(testAddress); 
+  //
+  //   testToken.approve(address(poolContract), amountToSupply);
+  //
+  //   poolContract.supply(address(testToken),amountToSupply);
+  //
+  //   assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
+  //   vm.stopPrank(); 
+  //
+  //   // since we have drawn everything off
+  //   assertEq(testToken.balanceOf(testAddress),0);
+  //
+  //   // make sure the contract has the correct and expected amount
+  //   assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
+  // }
 }

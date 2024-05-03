@@ -12,4 +12,4 @@ baseSepolia = "https://sepolia.base.org"
 baseSepolia = { key = "${BASESCAN_API_KEY}", url = "https://api-sepolia.basescan.org/api" }
 base = { key = "${BASESCAN_API_KEY}", url = "https://api.basescan.org/api" }
 
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+unknown_chain = { key = "${TENDERLY_ACCESS_KEY}", chain = 73571, url = "${TENDERLY_VIRTUAL_TESTNET_RPC_URL}/verify/etherscan" }
