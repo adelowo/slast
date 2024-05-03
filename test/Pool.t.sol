@@ -6,7 +6,6 @@ import "../src/Pool.sol";
 import "../src/Config.sol";
 import "../src/interfaces/Vault.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "aave-v3-core/contracts/interfaces/Ipool.sol";
 
 interface Token {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
