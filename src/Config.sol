@@ -4,7 +4,6 @@ pragma solidity >=0.8.23;
 
 import "./interfaces/Configuration.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "aave-v3-core/contracts/interfaces/Ipool.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 event NewSupportedToken(address indexed asset);
