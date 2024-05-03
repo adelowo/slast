@@ -55,7 +55,9 @@ contract Pool is Ownable(msg.sender) {
 
       emit Deposit(msg.sender,tokenAddress,amount);
 
-      _aavePoolAddress.deposit(tokenAddress,amount,address(this),0);
+      if (tokenAddress != DEAD_ADDRESS) {
+        _aavePoolAddress.deposit(tokenAddress,amount,address(this),0);
+      }
     }
 
 
