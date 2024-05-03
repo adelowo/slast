@@ -10,10 +10,12 @@ contract AaveTest is Test {
 
   Aave aaveVault;
 
+  address private constant baseAavePoolAddress = 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5;
+
   address private constant usdcAddress = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
   function setUp() public {
-    aaveVault = new Aave();
+    aaveVault = new Aave(baseAavePoolAddress);
   }
 
 
