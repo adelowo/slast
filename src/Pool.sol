@@ -6,6 +6,7 @@ import {console} from "forge-std/Test.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "aave-v3-core/contracts/interfaces/Ipool.sol";
 import "./interfaces/Configuration.sol";
+import "./interfaces/Vault.sol";
 
 contract Pool is Ownable(msg.sender) {
     uint256 public feePercentage;
@@ -26,7 +27,7 @@ contract Pool is Ownable(msg.sender) {
 
     // we eventually want to support more than the Base chain
     // at some time in the future. so no need to hardcode
-    IPool _aavePoolAddress;
+    Vault _vaultAddress;
 
     Configuration _config;
 
@@ -37,7 +38,7 @@ contract Pool is Ownable(msg.sender) {
       require(address(_configuration) != address(0), "Configurator address cannot be a zero address"); 
 
       feePercentage = _feePercentage;
-      _aavePoolAddress = IPool(_aavePool);
+      _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
     }
 
@@ -48,7 +49,7 @@ contract Pool is Ownable(msg.sender) {
         assetContract.transferFrom(msg.sender,address(this),amount);
 
         // no unlimted allowance to Slast. Only give allowances as needed
-        assetContract.approve(address(_aavePoolAddress), amount);
+        assetContract.approve(address(_vaultAddress), amount);
       }
 
       userHoldings[msg.sender][tokenAddress] += amount;
@@ -56,7 +57,7 @@ contract Pool is Ownable(msg.sender) {
       emit Deposit(msg.sender,tokenAddress,amount);
 
       if (tokenAddress != DEAD_ADDRESS) {
-        _aavePoolAddress.deposit(tokenAddress,amount,address(this),0);
+        _vaultAddress.deposit(tokenAddress,amount,address(this),0);
       }
     }
 

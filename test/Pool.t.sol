@@ -4,6 +4,7 @@ pragma solidity >= 0.8.23;
 import {Test,console} from "forge-std/Test.sol";
 import "../src/Pool.sol";
 import "../src/Config.sol";
+import "../src/interfaces/Vault.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "aave-v3-core/contracts/interfaces/Ipool.sol";
 
@@ -11,6 +12,20 @@ interface Token {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
     function mint(address to, uint256 amount) external; // Add mint function
+}
+
+contract MockLendingPool is Vault {
+    mapping(address => uint256) public deposits;
+
+    function deposit(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external {
+        deposits[onBehalfOf] += amount;
+    }
+
 }
 
 contract MockToken is ERC20{
@@ -33,6 +48,7 @@ contract PoolTest is Test {
   Pool poolContract;
   MockToken public testToken;
   Config cfg;
+  Vault mockLendingPool;
 
   uint256 percentage = 1;
 
@@ -41,8 +57,9 @@ contract PoolTest is Test {
   function setUp() public {
 
     cfg = new Config();
+    mockLendingPool = new MockLendingPool();
 
-    poolContract = new Pool(percentage, 0xA238Dd80C259a72e81d7e4664a9801593F98d1c5, address(cfg));
+    poolContract = new Pool(percentage, address(mockLendingPool), address(cfg));
     testToken = new MockToken("USDC", "USDC");
   }
 
@@ -65,25 +82,25 @@ contract PoolTest is Test {
     vm.stopPrank(); 
   }
 
-  // function test_supply() public {
-  //   address testAddress = address(0x126); 
-  //
-  //   uint256 amountToSupply = 50 * (10 ** testToken.decimals());
-  //   testToken.mint(testAddress, amountToSupply);
-  //
-  //   vm.startPrank(testAddress); 
-  //
-  //   testToken.approve(address(poolContract), amountToSupply);
-  //
-  //   poolContract.supply(address(testToken),amountToSupply);
-  //
-  //   assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
-  //   vm.stopPrank(); 
-  //
-  //   // since we have drawn everything off
-  //   assertEq(testToken.balanceOf(testAddress),0);
-  //
-  //   // make sure the contract has the correct and expected amount
-  //   assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
-  // }
+  function test_supply() public {
+    address testAddress = address(0x126); 
+
+    uint256 amountToSupply = 50 * (10 ** testToken.decimals());
+    testToken.mint(testAddress, amountToSupply);
+
+    vm.startPrank(testAddress); 
+
+    testToken.approve(address(poolContract), amountToSupply);
+
+    poolContract.supply(address(testToken),amountToSupply);
+
+    assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
+    vm.stopPrank(); 
+
+    // since we have drawn everything off
+    assertEq(testToken.balanceOf(testAddress),0);
+
+    // make sure the contract has the correct and expected amount
+    assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
+  }
 }
