@@ -3,12 +3,28 @@ pragma solidity >= 0.8.23;
 
 import {Test,console} from "forge-std/Test.sol";
 import "../src/Pool.sol";
+import "../src/Config.sol";
+import "../src/interfaces/Vault.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 interface Token {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
     function mint(address to, uint256 amount) external; // Add mint function
+}
+
+contract MockLendingPool is Vault {
+    mapping(address => uint256) public deposits;
+
+    function deposit(
+        address asset,
+        uint256 amount,
+        address onBehalfOf,
+        uint16 referralCode
+    ) external {
+        deposits[onBehalfOf] += amount;
+    }
+
 }
 
 contract MockToken is ERC20{
@@ -30,13 +46,19 @@ contract PoolTest is Test {
 
   Pool poolContract;
   MockToken public testToken;
+  Config cfg;
+  Vault mockLendingPool;
 
   uint256 percentage = 1;
 
   address private constant usdcContractAddress = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
 
   function setUp() public {
-    poolContract = new Pool(percentage);
+
+    cfg = new Config();
+    mockLendingPool = new MockLendingPool();
+
+    poolContract = new Pool(percentage, address(mockLendingPool), address(cfg));
     testToken = new MockToken("USDC", "USDC");
   }
 
