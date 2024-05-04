@@ -28,41 +28,53 @@ contract Pool is Ownable(msg.sender) {
     // at some time in the future. so no need to hardcode
     Vault _vaultAddress;
 
+    NativeVault _wethGateway;
+
     Configuration _config;
 
     event Deposit(address indexed from, address indexed token, uint256 amount);
 
-    constructor(uint256 _feePercentage, address _aavePool, address _configuration) {
+    constructor(uint256 _feePercentage, address _aavePool, 
+                address _configuration,
+                address _nativeGateway) {
+
       require(address(_aavePool) != address(0), "Aave pool vault cannot be a zero address"); 
       require(address(_configuration) != address(0), "Configurator address cannot be a zero address"); 
+      require(address(_nativeGateway) != address(0), "WETH gateway address cannot be a zero address"); 
 
       feePercentage = _feePercentage;
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
+      _wethGateway = NativeVault(_nativeGateway);
     }
 
     function supply(address tokenAddress, uint256 amount) public {
 
-      if (tokenAddress != DEAD_ADDRESS) {
+      require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
+      require(tokenAddress != address(0), "You cannot provide a burn address");
+
+      if (_config.isSupported(tokenAddress)) {
+
         IERC20 assetContract = IERC20(tokenAddress);
         assetContract.transferFrom(msg.sender,address(this),amount);
 
         // no unlimted allowance to Slast. Only give allowances as needed
         assetContract.approve(address(_vaultAddress), amount);
+        _vaultAddress.deposit(tokenAddress,amount,address(this),0);
       }
 
       userHoldings[msg.sender][tokenAddress] += amount;
 
       emit Deposit(msg.sender,tokenAddress,amount);
-
-      if (tokenAddress != DEAD_ADDRESS) {
-        _vaultAddress.deposit(tokenAddress,amount,address(this),0);
-      }
     }
 
-
     function depositNativeToken() public payable {
-      supply(DEAD_ADDRESS, msg.value);
+
+      _wethGateway.depositETH{value:msg.value}(address(_vaultAddress),address(this), 0);
+
+      userHoldings[msg.sender][DEAD_ADDRESS] += msg.value;
+
+      emit Deposit(msg.sender,DEAD_ADDRESS,msg.value);
     }
 
     function getFee() external view returns (uint256) {
