@@ -33,6 +33,7 @@ contract Pool is Ownable(msg.sender) {
     Configuration _config;
 
     event Deposit(address indexed from, address indexed token, uint256 amount);
+    event Withdraw(address indexed from, address indexed token, uint256 amount);
 
     constructor(uint256 _feePercentage, address _aavePool, 
                 address _configuration,
@@ -46,6 +47,25 @@ contract Pool is Ownable(msg.sender) {
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
       _wethGateway = NativeVault(_nativeGateway);
+    }
+
+
+    function withdraw(address tokenAddress, uint256 amount) public {
+
+      require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
+      require(tokenAddress != address(0), "You cannot provide a burn address");
+
+      require(userHoldings[msg.sender][tokenAddress] > 0, "You do not hold this token so cannot withdraw")
+
+      userHoldings[msg.sender][tokenAddress] -= amount;
+
+      require(userHoldings[msg.sender][tokenAddress] > 0, "cannot perform this operation as your balance will be off")
+
+      // send directly to the user;
+      _vaultAddress.withdraw(tokenAddress,amount,msg.sender);
+
+
+      emit Withdraw(msg.sender,tokenAddress,amount);
     }
 
     function supply(address tokenAddress, uint256 amount) public {
