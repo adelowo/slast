@@ -125,4 +125,15 @@ contract PoolTest is Test {
 
     poolContract.supply(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,5000);
   }
+
+  function test_constructor_no_zero_address() public {
+
+    vm.expectRevert();
+
+    address testAddress = address(0x126); 
+
+    new Pool(0,address(0),testAddress,testAddress);
+    new Pool(0,testAddress, address(0),testAddress);
+    new Pool(0,testAddress, testAddress,address(0));
+  }
 }
