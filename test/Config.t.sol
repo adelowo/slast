@@ -78,4 +78,11 @@ contract ContractTest is Test {
 
     cfg.pauseAssetSupply(usdcAddress);
   }
+
+  function test_cannot_pauseAssetSupply() public {
+
+    vm.expectRevert(); 
+
+    cfg.pauseAssetSupply(usdcAddress);
+  }
 }

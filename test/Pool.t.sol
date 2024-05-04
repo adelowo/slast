@@ -25,6 +25,9 @@ contract MockLendingPool is Vault {
         deposits[onBehalfOf] += amount;
     }
 
+    function depositETH(address, address onBehalfOf, uint16 referralCode) external payable {
+        deposits[onBehalfOf] += msg.value;
+    }
 }
 
 contract MockToken is ERC20{
@@ -58,8 +61,11 @@ contract PoolTest is Test {
     cfg = new Config();
     mockLendingPool = new MockLendingPool();
 
-    poolContract = new Pool(percentage, address(mockLendingPool), address(cfg));
+    poolContract = new Pool(percentage, address(mockLendingPool), address(cfg),address(mockLendingPool));
     testToken = new MockToken("USDC", "USDC");
+
+
+    cfg.addSupportedAsset(address(testToken));
   }
 
   function test_getFee() public {
@@ -82,6 +88,8 @@ contract PoolTest is Test {
   }
 
   function test_supply() public {
+
+
     address testAddress = address(0x126); 
 
     uint256 amountToSupply = 50 * (10 ** testToken.decimals());
@@ -90,6 +98,7 @@ contract PoolTest is Test {
     vm.startPrank(testAddress); 
 
     testToken.approve(address(poolContract), amountToSupply);
+
 
     poolContract.supply(address(testToken),amountToSupply);
 
@@ -101,5 +110,19 @@ contract PoolTest is Test {
 
     // make sure the contract has the correct and expected amount
     assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
+  }
+
+  function test_supply_zero_address() public {
+
+
+    address testAddress = address(0x126); 
+
+    vm.expectRevert();
+
+    poolContract.supply(address(0),5000);
+
+    vm.expectRevert();
+
+    poolContract.supply(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,5000);
   }
 }
