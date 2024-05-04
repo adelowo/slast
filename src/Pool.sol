@@ -43,21 +43,22 @@ contract Pool is Ownable(msg.sender) {
 
     function supply(address tokenAddress, uint256 amount) public {
 
-      if (tokenAddress != DEAD_ADDRESS) {
+      require(tokenAddress == DEAD_ADDRESS, "You cannot provide a burn address");
+      require(tokenAddress == address(0), "You cannot provide a burn address");
+
+      if (tokenAddress != DEAD_ADDRESS && _config.isSupported(tokenAddress)) {
+
         IERC20 assetContract = IERC20(tokenAddress);
         assetContract.transferFrom(msg.sender,address(this),amount);
 
         // no unlimted allowance to Slast. Only give allowances as needed
         assetContract.approve(address(_vaultAddress), amount);
+        _vaultAddress.deposit(tokenAddress,amount,address(this),0);
       }
 
       userHoldings[msg.sender][tokenAddress] += amount;
 
       emit Deposit(msg.sender,tokenAddress,amount);
-
-      if (tokenAddress != DEAD_ADDRESS) {
-        _vaultAddress.deposit(tokenAddress,amount,address(this),0);
-      }
     }
 
 
