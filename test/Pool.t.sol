@@ -128,12 +128,14 @@ contract PoolTest is Test {
 
   function test_constructor_no_zero_address() public {
 
-    vm.expectRevert();
 
     address testAddress = address(0x126); 
 
+    vm.expectRevert();
     new Pool(0,address(0),testAddress,testAddress);
+    vm.expectRevert();
     new Pool(0,testAddress, address(0),testAddress);
+    vm.expectRevert();
     new Pool(0,testAddress, testAddress,address(0));
   }
 }

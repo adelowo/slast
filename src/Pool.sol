@@ -46,7 +46,6 @@ contract Pool is Ownable(msg.sender) {
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
       _wethGateway = NativeVault(_nativeGateway);
-
     }
 
     function supply(address tokenAddress, uint256 amount) public {
