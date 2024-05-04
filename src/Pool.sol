@@ -71,7 +71,7 @@ contract Pool is Ownable(msg.sender) {
 
     function depositNativeToken() public payable {
 
-      _wethGateway.depositETH(address(_vaultAddress),address(this), 0);
+      _wethGateway.depositETH{value:msg.value}(address(_vaultAddress),address(this), 0);
 
       userHoldings[msg.sender][DEAD_ADDRESS] += msg.value;
 
