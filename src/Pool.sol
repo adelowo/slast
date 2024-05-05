@@ -10,6 +10,9 @@ import "./interfaces/Vault.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 
+event Deposit(address indexed from, address indexed token, uint256 amount);
+event Withdraw(address indexed from, address indexed token, uint256 amount);
+
 contract Pool is Ownable(msg.sender), ReentrancyGuard {
 
     using Math for uint256;
@@ -38,8 +41,6 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
 
     Configuration _config;
 
-    event Deposit(address indexed from, address indexed token, uint256 amount);
-    event Withdraw(address indexed from, address indexed token, uint256 amount);
 
     constructor(uint256 _feePercentage, address _aavePool, 
                 address _configuration,

@@ -128,6 +128,10 @@ contract PoolTest is Test {
     vm.expectRevert(bytes("You do not hold enough tokens"));
     poolContract.withdraw(address(testToken),amountToSupply * 2);
 
+
+    vm.expectEmit(true,true,true,true,address(poolContract));
+    emit Withdraw(address(testAddress), address(testToken), amountToSupply);
+
     poolContract.withdraw(address(testToken),amountToSupply);
 
     vm.stopPrank(); 
