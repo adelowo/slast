@@ -6,8 +6,10 @@ pragma solidity >= 0.8.23;
 // Vault or TokenVault
 interface Vault {
   function deposit(address asset, uint256 amount, address onBehalfOf, uint16 referralCode) external;
+  function withdraw(address asset, uint256 amount, address to) external;
 }
 
 interface NativeVault {
   function depositETH(address, address onBehalfOf, uint16 referralCode) external payable;
+  function withdrawETH(address asset, uint256 amount, address to) external;
 }
