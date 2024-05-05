@@ -106,7 +106,6 @@ contract PoolTest is Test {
 
     poolContract.supply(address(testToken),amountToSupply);
 
-    assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
 
     // cannot withdraw a zero address token
     vm.expectRevert(bytes("You cannot provide a burn address"));
@@ -132,7 +131,13 @@ contract PoolTest is Test {
     vm.expectEmit(true,true,true,true,address(poolContract));
     emit Withdraw(address(testAddress), address(testToken), amountToSupply);
 
+    // check balance before withdrawal
+    assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
+
     poolContract.withdraw(address(testToken),amountToSupply);
+
+    // make sure all was taken off
+    assertEq(poolContract.balanceOf(address(testToken)), 0);
 
     vm.stopPrank(); 
   }
