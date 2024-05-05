@@ -62,7 +62,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
     }
 
     function safeSub(uint256 a, uint256 b) private pure returns (uint256) {
-      (bool noOverflow, uint256 c) = Math.tryMul(a, b);
+      (bool noOverflow, uint256 c) = Math.trySub(a, b);
       require(noOverflow, "Overflow from subtraction");
       return c;
     }
@@ -71,6 +71,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
+      require(amount != 0, "You cannot withdraw zero tokens");
 
       require(userHoldings[msg.sender][tokenAddress] > 0, "You do not hold this token so cannot withdraw");
 
