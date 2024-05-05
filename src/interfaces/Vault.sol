@@ -11,4 +11,5 @@ interface Vault {
 
 interface NativeVault {
   function depositETH(address, address onBehalfOf, uint16 referralCode) external payable;
+  function withdrawETH(address asset, uint256 amount, address to) external;
 }

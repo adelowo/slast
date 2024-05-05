@@ -32,6 +32,10 @@ contract MockLendingPool is Vault {
   function withdraw(address asset, uint256 amount, address to) external {
     deposits[msg.sender] -= amount;
   }
+
+  function withdrawETH(address asset, uint256 amount, address to) external {
+    deposits[msg.sender] -= amount;
+  }
 }
 
 contract MockToken is ERC20{
@@ -87,6 +91,41 @@ contract PoolTest is Test {
     poolContract.depositNativeToken{value: depositAmount}();
 
     assertEq(poolContract.getNativeTokenBalance(),depositAmount);
+
+    vm.stopPrank(); 
+  }
+
+  function test_withdraw_native_token() public {
+
+
+    address testAddress = address(0x126); 
+    uint256 depositAmount = 0.1 ether;
+
+    vm.deal(testAddress, depositAmount); 
+
+    vm.startPrank(testAddress); 
+
+    poolContract.depositNativeToken{value: depositAmount}();
+
+
+    // right token, zero amount
+    vm.expectRevert(bytes("You cannot withdraw zero tokens"));
+    poolContract.withdrawNativeToken(0);
+
+    // right token but not enough balance
+    vm.expectRevert(bytes("You do not hold enough tokens"));
+    poolContract.withdrawNativeToken(0.2 ether); // we supplied 0.1 ether
+
+
+    vm.expectEmit(true,true,true,true,address(poolContract));
+    emit Withdraw(address(testAddress),  0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, depositAmount);
+
+    // check balance before withdrawal
+    assertEq(poolContract.getNativeTokenBalance(),depositAmount);
+    poolContract.withdrawNativeToken(depositAmount);
+
+    // make sure all was taken off
+    assertEq(poolContract.getNativeTokenBalance(), 0);
 
     vm.stopPrank(); 
   }

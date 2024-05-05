@@ -88,6 +88,26 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       emit Withdraw(msg.sender,tokenAddress,amount);
     }
 
+    function withdrawNativeToken(uint256 amount) public nonReentrant {
+
+      address tokenAddress = DEAD_ADDRESS;
+
+      require(amount != 0, "You cannot withdraw zero tokens");
+
+      require(userHoldings[msg.sender][tokenAddress] > 0, "You do not hold this token so cannot withdraw");
+
+      require(userHoldings[msg.sender][tokenAddress] >= amount, "You do not hold enough tokens");
+
+      userHoldings[msg.sender][tokenAddress] = safeSub(userHoldings[msg.sender][tokenAddress], amount);
+
+      require(userHoldings[msg.sender][tokenAddress] >= 0, "Your balance is off");
+
+      // send directly to the user;
+      _wethGateway.withdrawETH(tokenAddress,amount,msg.sender);
+
+      emit Withdraw(msg.sender,tokenAddress,amount);
+    }
+
     function supply(address tokenAddress, uint256 amount) public {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
