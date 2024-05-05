@@ -2,12 +2,18 @@
 pragma solidity >=0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {console} from "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/Configuration.sol";
 import "./interfaces/Vault.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-contract Pool is Ownable(msg.sender) {
+
+contract Pool is Ownable(msg.sender), ReentrancyGuard {
+
+    using Math for uint256;
+
     uint256 public feePercentage;
 
     struct HoldingsInfo {
@@ -49,21 +55,33 @@ contract Pool is Ownable(msg.sender) {
       _wethGateway = NativeVault(_nativeGateway);
     }
 
+    function safeAdd(uint256 a, uint256 b) private pure returns (uint256) {
+      (bool noOverflow, uint256 c) = Math.tryAdd(a,b);
+      require(noOverflow, "Overflow from addition");
+      return c;
+    }
 
-    function withdraw(address tokenAddress, uint256 amount) public {
+    function safeSub(uint256 a, uint256 b) private pure returns (uint256) {
+      (bool noOverflow, uint256 c) = Math.tryMul(a, b);
+      require(noOverflow, "Overflow from subtraction");
+      return c;
+    }
+
+    function withdraw(address tokenAddress, uint256 amount) public nonReentrant {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
 
-      require(userHoldings[msg.sender][tokenAddress] > 0, "You do not hold this token so cannot withdraw")
+      require(userHoldings[msg.sender][tokenAddress] > 0, "You do not hold this token so cannot withdraw");
 
-      userHoldings[msg.sender][tokenAddress] -= amount;
+      require(userHoldings[msg.sender][tokenAddress] >= amount, "You do not hold enough tokens");
 
-      require(userHoldings[msg.sender][tokenAddress] > 0, "cannot perform this operation as your balance will be off")
+      userHoldings[msg.sender][tokenAddress] = safeSub(userHoldings[msg.sender][tokenAddress], amount);
+
+      require(userHoldings[msg.sender][tokenAddress] > 0, "Your balance is off");
 
       // send directly to the user;
       _vaultAddress.withdraw(tokenAddress,amount,msg.sender);
-
 
       emit Withdraw(msg.sender,tokenAddress,amount);
     }
@@ -72,6 +90,11 @@ contract Pool is Ownable(msg.sender) {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
+
+
+      uint256 balance = userHoldings[msg.sender][tokenAddress];
+
+      userHoldings[msg.sender][tokenAddress] = safeAdd(balance,amount);
 
       if (_config.isSupported(tokenAddress)) {
 
@@ -83,16 +106,14 @@ contract Pool is Ownable(msg.sender) {
         _vaultAddress.deposit(tokenAddress,amount,address(this),0);
       }
 
-      userHoldings[msg.sender][tokenAddress] += amount;
-
       emit Deposit(msg.sender,tokenAddress,amount);
     }
 
     function depositNativeToken() public payable {
 
-      _wethGateway.depositETH{value:msg.value}(address(_vaultAddress),address(this), 0);
+      userHoldings[msg.sender][DEAD_ADDRESS] = safeAdd(userHoldings[msg.sender][DEAD_ADDRESS],msg.value);
 
-      userHoldings[msg.sender][DEAD_ADDRESS] += msg.value;
+      _wethGateway.depositETH{value:msg.value}(address(_vaultAddress),address(this), 0);
 
       emit Deposit(msg.sender,DEAD_ADDRESS,msg.value);
     }

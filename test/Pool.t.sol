@@ -28,6 +28,10 @@ contract MockLendingPool is Vault {
     function depositETH(address, address onBehalfOf, uint16 referralCode) external payable {
         deposits[onBehalfOf] += msg.value;
     }
+
+  function withdraw(address asset, uint256 amount, address to) external {
+    deposits[msg.sender] -= amount;
+  }
 }
 
 contract MockToken is ERC20{
