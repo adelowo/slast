@@ -91,6 +91,48 @@ contract PoolTest is Test {
     vm.stopPrank(); 
   }
 
+  function test_withdraw() public {
+
+
+    address testAddress = address(0x126); 
+
+    uint256 amountToSupply = 50 * (10 ** testToken.decimals());
+    testToken.mint(testAddress, amountToSupply);
+
+    vm.startPrank(testAddress); 
+
+    testToken.approve(address(poolContract), amountToSupply);
+
+
+    poolContract.supply(address(testToken),amountToSupply);
+
+    assertEq(poolContract.balanceOf(address(testToken)), amountToSupply);
+
+    // cannot withdraw a zero address token
+    vm.expectRevert(bytes("You cannot provide a burn address"));
+    poolContract.withdraw(address(0),amountToSupply);
+
+    // cannot withdraw DEAD address token
+    vm.expectRevert(bytes("You cannot provide a burn address"));
+    poolContract.withdraw(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,amountToSupply);
+
+    // right token, zero amount
+    vm.expectRevert(bytes("You cannot withdraw zero tokens"));
+    poolContract.withdraw(usdcContractAddress,0);
+
+    // cannot withdraw token user is not holding
+    vm.expectRevert(bytes("You do not hold this token so cannot withdraw"));
+    poolContract.withdraw(address(0x130),amountToSupply);
+
+    // right token but not enough balance
+    vm.expectRevert(bytes("You do not hold enough tokens"));
+    poolContract.withdraw(address(testToken),amountToSupply * 2);
+
+    poolContract.withdraw(address(testToken),amountToSupply);
+
+    vm.stopPrank(); 
+  }
+
   function test_supply() public {
 
 

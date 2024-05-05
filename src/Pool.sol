@@ -79,7 +79,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
 
       userHoldings[msg.sender][tokenAddress] = safeSub(userHoldings[msg.sender][tokenAddress], amount);
 
-      require(userHoldings[msg.sender][tokenAddress] > 0, "Your balance is off");
+      require(userHoldings[msg.sender][tokenAddress] >= 0, "Your balance is off");
 
       // send directly to the user;
       _vaultAddress.withdraw(tokenAddress,amount,msg.sender);
