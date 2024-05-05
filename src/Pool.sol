@@ -17,13 +17,24 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
 
     using Math for uint256;
 
-    uint256 public feePercentage;
+    // Slast's fee
+    uint256 private feePercentage;
 
     struct HoldingsInfo {
         uint256 amount;
     }
 
     mapping(address => HoldingsInfo) private balanceMappings;
+
+    struct SavingsConfig {
+      uint256 percentage;
+
+      bool pauseSave;
+    }
+
+    mapping(address => mapping(address => SavingsConfig)) private savingsConfig;
+
+    uint256 private defaultPercentage = 1;
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER
@@ -129,6 +140,19 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       }
 
       emit Deposit(msg.sender,tokenAddress,amount);
+    }
+
+    function transfer(address tokenAddress, uint256 amount) public {
+
+      require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
+      require(tokenAddress != address(0), "You cannot provide a burn address");
+
+      uint256 perc = savingsConfig[msg.sender][tokenAddress].percentage;
+
+      if (perc == 0) {
+        perc = defaultPercentage;
+      }
+
     }
 
     function depositNativeToken() public payable {
