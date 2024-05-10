@@ -6,6 +6,7 @@ import "../src/Pool.sol";
 import "../src/Config.sol";
 import "../src/interfaces/Vault.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
 interface Token {
     function transferFrom(address from, address to, uint256 amount) external returns (bool);
@@ -179,6 +180,34 @@ contract PoolTest is Test {
     assertEq(poolContract.balanceOf(address(testToken)), 0);
 
     vm.stopPrank(); 
+  }
+
+
+  function test_forwardToken() public {
+
+    address testAddress = address(0x126); 
+    address recipientAddress = address(0x166);
+
+    uint256 amountToSupply = 50 * (10 ** testToken.decimals());
+    // 1% is the default
+    uint256 expectedAmountToSave = Math.mulDiv(amountToSupply, 1 * 100, 10000);
+
+    testToken.mint(testAddress, amountToSupply);
+
+    vm.startPrank(testAddress); 
+
+    testToken.approve(address(poolContract), amountToSupply);
+
+    poolContract.saveAndSpendToken(address(testToken), amountToSupply, recipientAddress);
+
+    assertEq(poolContract.balanceOf(address(testToken)), expectedAmountToSave);
+    vm.stopPrank(); 
+
+    // make sure recipientAddress got the expected amount
+    assertEq(testToken.balanceOf(recipientAddress),amountToSupply - expectedAmountToSave);
+
+    // make sure pool contract got the right amount
+    assertEq(testToken.balanceOf(address(poolContract)), expectedAmountToSave);
   }
 
   function test_supply() public {

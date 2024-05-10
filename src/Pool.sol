@@ -12,18 +12,31 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 
 event Deposit(address indexed from, address indexed token, uint256 amount);
 event Withdraw(address indexed from, address indexed token, uint256 amount);
+event Forward(address indexed from, address indexed recipient, address indexed token, uint256 amount);
 
 contract Pool is Ownable(msg.sender), ReentrancyGuard {
 
     using Math for uint256;
 
-    uint256 public feePercentage;
+    // Slast's fee
+    uint256 private feePercentage;
 
     struct HoldingsInfo {
         uint256 amount;
     }
 
     mapping(address => HoldingsInfo) private balanceMappings;
+
+    struct SavingsConfig {
+      uint256 percentage;
+
+      bool pauseSave;
+    }
+
+    mapping(address => mapping(address => SavingsConfig)) private savingsConfig;
+
+    // 1% is expressed as 100
+    uint256 private defaultPercentage = 1 * 100;
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER
@@ -54,6 +67,10 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
       _wethGateway = NativeVault(_nativeGateway);
+    }
+
+    function calculatePercentage(uint256 amount, uint256 percentage) private pure returns (uint256) {
+      return Math.mulDiv(amount, percentage, 10000);
     }
 
     function safeAdd(uint256 a, uint256 b) private pure returns (uint256) {
@@ -129,6 +146,28 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       }
 
       emit Deposit(msg.sender,tokenAddress,amount);
+    }
+
+    function saveAndSpendToken(address tokenAddress, uint256 amount, address receiver) public {
+
+      require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
+      require(tokenAddress != address(0), "You cannot provide a burn address");
+
+      uint256 perc = savingsConfig[msg.sender][tokenAddress].percentage;
+
+      if (perc == 0) {
+        perc = defaultPercentage;
+      }
+
+     uint256 discountedPrice = calculatePercentage(amount, perc);
+
+     uint256 amountToTransfer = amount - discountedPrice;
+
+     // transfer the new amount to the intended recipient
+     IERC20 assetContract = IERC20(tokenAddress);
+     assetContract.transferFrom(msg.sender,receiver, amountToTransfer);
+
+     supply(tokenAddress, discountedPrice);
     }
 
     function depositNativeToken() public payable {
