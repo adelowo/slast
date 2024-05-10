@@ -85,6 +85,17 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       return c;
     }
 
+    function getSavingsConfig() external view returns (uint256 percentage, bool isPaused) {
+
+      SavingsConfig memory config = userSavingsConfig[msg.sender];
+
+      if (config.percentage == 0) {
+        return (defaultPercentage/100,false);
+      }
+
+      return (config.percentage/100, config.pauseSave); 
+    }
+
     function updateUserSavingsConfig(
       uint256 newPercentage, 
       bool shouldPauseSavings
