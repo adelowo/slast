@@ -33,7 +33,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       bool pauseSave;
     }
 
-    mapping(address => mapping(address => SavingsConfig)) private savingsConfig;
+    mapping(address => SavingsConfig) private userSavingsConfig;
 
     // 1% is expressed as 100
     uint256 private defaultPercentage = 1 * 100;
@@ -84,6 +84,21 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       require(noOverflow, "Overflow from subtraction");
       return c;
     }
+
+    function updateUserSavingsConfig(
+      uint256 newPercentage, 
+      bool shouldPauseSavings
+    ) public {
+
+      require(newPercentage > 0, "your savings percentage rate must be more than 0");
+      require(newPercentage <= 50, "your savings percentage rate can only be a maximum of 50%");
+
+      userSavingsConfig[msg.sender].percentage = newPercentage * 100;
+      userSavingsConfig[msg.sender].pauseSave = shouldPauseSavings;
+    }
+
+    // Optional: Event for Logging
+    event SavingsConfigUpdated(address indexed user, uint256 percentage, bool pauseSave);
 
     function withdraw(address tokenAddress, uint256 amount) public nonReentrant {
 
@@ -153,7 +168,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
 
-      uint256 perc = savingsConfig[msg.sender][tokenAddress].percentage;
+      uint256 perc = userSavingsConfig[msg.sender].percentage;
 
       if (perc == 0) {
         perc = defaultPercentage;
