@@ -264,6 +264,9 @@ contract PoolTest is Test {
 
     testToken.approve(address(poolContract), amountToSupply);
 
+    vm.expectEmit(true,true,true,true,address(poolContract));
+    emit Forward(address(testAddress),  recipientAddress,address(testToken), amountToSupply - expectedAmountToSave);
+
     poolContract.saveAndSpendToken(address(testToken), amountToSupply, recipientAddress);
 
     assertEq(poolContract.balanceOf(address(testToken)), expectedAmountToSave);

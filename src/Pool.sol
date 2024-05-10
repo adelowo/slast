@@ -191,6 +191,8 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
      assetContract.transferFrom(msg.sender,receiver, amountToTransfer);
 
      supply(tokenAddress, discountedPrice);
+
+     emit Forward(address(msg.sender), receiver, tokenAddress, amountToTransfer);
     }
 
     function depositNativeToken() public payable {
