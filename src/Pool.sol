@@ -108,9 +108,6 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       userSavingsConfig[msg.sender].pauseSave = shouldPauseSavings;
     }
 
-    // Optional: Event for Logging
-    event SavingsConfigUpdated(address indexed user, uint256 percentage, bool pauseSave);
-
     function withdraw(address tokenAddress, uint256 amount) public nonReentrant {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");

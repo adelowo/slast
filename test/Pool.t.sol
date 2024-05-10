@@ -218,7 +218,38 @@ contract PoolTest is Test {
   }
 
 
-  function test_forwardToken() public {
+  function test_forwardToken_with_user_savings_config() public {
+
+    address testAddress = address(0x126); 
+    address recipientAddress = address(0x166);
+
+    uint256 amountToSupply = 50 * (10 ** testToken.decimals());
+
+    testToken.mint(testAddress, amountToSupply);
+
+    vm.startPrank(testAddress); 
+
+    // take 50%
+    uint256 expectedAmountToSave = Math.mulDiv(amountToSupply, 50 * 100, 10000);
+
+    poolContract.updateUserSavingsConfig(50,true);
+
+    testToken.approve(address(poolContract), amountToSupply);
+
+    poolContract.saveAndSpendToken(address(testToken), amountToSupply, recipientAddress);
+
+    assertEq(poolContract.balanceOf(address(testToken)), expectedAmountToSave);
+    vm.stopPrank(); 
+
+    // make sure recipientAddress got the expected amount
+    assertEq(testToken.balanceOf(recipientAddress),amountToSupply - expectedAmountToSave);
+
+    // make sure pool contract got the right amount
+    assertEq(testToken.balanceOf(address(poolContract)), expectedAmountToSave);
+  }
+
+
+  function test_forwardToken_default_savings_config() public {
 
     address testAddress = address(0x126); 
     address recipientAddress = address(0x166);
