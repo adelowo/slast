@@ -182,6 +182,41 @@ contract PoolTest is Test {
     vm.stopPrank(); 
   }
 
+  function test_getSavingsConfig() public {
+
+    address testAddress = address(0x126); 
+
+    vm.startPrank(testAddress);
+
+    (uint256 percentage,bool isPaused) = poolContract.getSavingsConfig();
+
+    assertEq(percentage, 1);
+    assertFalse(isPaused);
+
+    poolContract.updateUserSavingsConfig(50,true);
+
+    (uint256 newpercentage,bool newisPaused) = poolContract.getSavingsConfig();
+
+    assertEq(newpercentage, 50);
+    assertTrue(newisPaused);
+
+    vm.stopPrank();
+  }
+
+  function test_updateUserSavingsConfig() public {
+
+    address testAddress = address(0x126); 
+
+    vm.expectRevert(bytes("your savings percentage rate must be more than 0"));
+    poolContract.updateUserSavingsConfig(0,true);
+
+
+    vm.expectRevert(bytes("your savings percentage rate can only be a maximum of 50%"));
+    poolContract.updateUserSavingsConfig(51,true);
+
+    poolContract.updateUserSavingsConfig(50,true);
+  }
+
 
   function test_forwardToken() public {
 
