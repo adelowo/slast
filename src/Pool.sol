@@ -8,13 +8,13 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/Configuration.sol";
 import "./interfaces/Vault.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 event Deposit(address indexed from, address indexed token, uint256 amount);
 event Withdraw(address indexed from, address indexed token, uint256 amount);
 event Forward(address indexed from, address indexed recipient, address indexed token, uint256 amount);
 
-contract Pool is Ownable(msg.sender), ReentrancyGuard {
+contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
 
     using Math for uint256;
 
@@ -67,6 +67,26 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
       _wethGateway = NativeVault(_nativeGateway);
+    }
+
+    function pause() public onlyOwner {
+      _pause();
+    }
+
+    function unpause() public onlyOwner {
+      _unpause();
+    }
+
+    function getFee() external view returns (uint256) {
+      return feePercentage;
+    }
+
+    function balanceOf(address tokenAddress) public view returns (uint256) {
+      return userHoldings[msg.sender][tokenAddress];
+    }
+
+    function getNativeTokenBalance() public view returns (uint256)  {
+      return balanceOf(DEAD_ADDRESS);
     }
 
     function calculatePercentage(uint256 amount, uint256 percentage) private pure returns (uint256) {
@@ -148,7 +168,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       emit Withdraw(msg.sender,tokenAddress,amount);
     }
 
-    function supply(address tokenAddress, uint256 amount) public {
+    function supply(address tokenAddress, uint256 amount) public whenNotPaused {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
@@ -171,7 +191,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
       emit Deposit(msg.sender,tokenAddress,amount);
     }
 
-    function saveAndSpendToken(address tokenAddress, uint256 amount, address receiver) public {
+    function saveAndSpendToken(address tokenAddress, uint256 amount, address receiver) public whenNotPaused {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
@@ -195,24 +215,12 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard {
      emit Forward(address(msg.sender), receiver, tokenAddress, amountToTransfer);
     }
 
-    function depositNativeToken() public payable {
+    function depositNativeToken() public payable whenNotPaused {
 
       userHoldings[msg.sender][DEAD_ADDRESS] = safeAdd(userHoldings[msg.sender][DEAD_ADDRESS],msg.value);
 
       _wethGateway.depositETH{value:msg.value}(address(_vaultAddress),address(this), 0);
 
       emit Deposit(msg.sender,DEAD_ADDRESS,msg.value);
-    }
-
-    function getFee() external view returns (uint256) {
-      return feePercentage;
-    }
-
-    function balanceOf(address tokenAddress) public view returns (uint256) {
-      return userHoldings[msg.sender][tokenAddress];
-    }
-
-    function getNativeTokenBalance() public view returns (uint256)  {
-      return balanceOf(DEAD_ADDRESS);
     }
 }
