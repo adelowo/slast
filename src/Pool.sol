@@ -17,7 +17,7 @@ event Deposit(address indexed from, address indexed token, uint256 amount);
 event Withdraw(address indexed from, address indexed token, uint256 amount);
 event Forward(address indexed from, address indexed recipient, address indexed token, uint256 amount);
 
-contract Pool is Initializable, OwnableUpgradeable , ReentrancyGuardUpgradeable, PausableUpgradeable {
+contract Pool is Initializable, UUPSUpgradeable , OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable{
 
     using Math for uint256;
 
@@ -57,7 +57,15 @@ contract Pool is Initializable, OwnableUpgradeable , ReentrancyGuardUpgradeable,
 
     Configuration _config;
 
-    function initialize(uint256 _feePercentage, address _aavePool, address _configuration, address _nativeGateway) initializer public {
+    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {
+    } 
+
+    function initialize(uint256 _feePercentage, address _aavePool, address _configuration,address _nativeGateway) initializer public {
+
+      __UUPSUpgradeable_init();
+      __Ownable_init(msg.sender);
+      __ReentrancyGuard_init();
+      __Pausable_init();
 
       require(address(_aavePool) != address(0), "Aave pool vault cannot be a zero address"); 
       require(address(_configuration) != address(0), "Configurator address cannot be a zero address"); 
