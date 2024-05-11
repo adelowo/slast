@@ -2,8 +2,6 @@
 pragma solidity >=0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "forge-std/console.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./interfaces/Configuration.sol";
 import "./interfaces/Vault.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
@@ -17,7 +15,7 @@ event Deposit(address indexed from, address indexed token, uint256 amount);
 event Withdraw(address indexed from, address indexed token, uint256 amount);
 event Forward(address indexed from, address indexed recipient, address indexed token, uint256 amount);
 
-contract Pool is Initializable, UUPSUpgradeable , OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable{
+contract Slast is Initializable, UUPSUpgradeable , OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable{
 
     using Math for uint256;
 
@@ -38,8 +36,7 @@ contract Pool is Initializable, UUPSUpgradeable , OwnableUpgradeable, Reentrancy
 
     mapping(address => SavingsConfig) private userSavingsConfig;
 
-    // 1% is expressed as 100
-    uint256 private defaultPercentage = 1 * 100;
+    uint256 private defaultPercentage;
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER
@@ -72,6 +69,7 @@ contract Pool is Initializable, UUPSUpgradeable , OwnableUpgradeable, Reentrancy
       require(address(_nativeGateway) != address(0), "WETH gateway address cannot be a zero address"); 
 
       feePercentage = _feePercentage;
+      defaultPercentage = 1 * 100;  // 1% is expressed as 100
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
       _wethGateway = NativeVault(_nativeGateway);
