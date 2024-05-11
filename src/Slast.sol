@@ -2,19 +2,20 @@
 pragma solidity >=0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "forge-std/console.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/Configuration.sol";
 import "./interfaces/Vault.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 event Deposit(address indexed from, address indexed token, uint256 amount);
 event Withdraw(address indexed from, address indexed token, uint256 amount);
 event Forward(address indexed from, address indexed recipient, address indexed token, uint256 amount);
 
-contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
+contract Slast is Initializable, UUPSUpgradeable , OwnableUpgradeable, ReentrancyGuardUpgradeable, PausableUpgradeable{
 
     using Math for uint256;
 
@@ -35,8 +36,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
 
     mapping(address => SavingsConfig) private userSavingsConfig;
 
-    // 1% is expressed as 100
-    uint256 private defaultPercentage = 1 * 100;
+    uint256 private defaultPercentage;
 
     // We use this as a token address to identiy ETH native token
     // we don't send anything to the burn address EVER
@@ -54,16 +54,22 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
 
     Configuration _config;
 
+    function _authorizeUpgrade(address newImplementation) internal onlyOwner override {
+    } 
 
-    constructor(uint256 _feePercentage, address _aavePool, 
-                address _configuration,
-                address _nativeGateway) {
+    function initialize(uint256 _feePercentage, address _aavePool, address _configuration,address _nativeGateway) initializer public {
+
+      __UUPSUpgradeable_init();
+      __Ownable_init(msg.sender);
+      __ReentrancyGuard_init();
+      __Pausable_init();
 
       require(address(_aavePool) != address(0), "Aave pool vault cannot be a zero address"); 
       require(address(_configuration) != address(0), "Configurator address cannot be a zero address"); 
       require(address(_nativeGateway) != address(0), "WETH gateway address cannot be a zero address"); 
 
       feePercentage = _feePercentage;
+      defaultPercentage = 1 * 100;  // 1% is expressed as 100
       _vaultAddress = Vault(_aavePool);
       _config = Configuration(_configuration);
       _wethGateway = NativeVault(_nativeGateway);

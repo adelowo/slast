@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >= 0.8.23;
 
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {Test,console} from "forge-std/Test.sol";
-import "../src/Pool.sol";
+import "../src/Slast.sol";
 import "../src/Config.sol";
 import "../src/interfaces/Vault.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -56,7 +57,7 @@ contract MockToken is ERC20{
 
 contract PoolTest is Test {
 
-  Pool poolContract;
+  Slast poolContract;
   MockToken public testToken;
   Config cfg;
   Vault mockLendingPool;
@@ -70,7 +71,10 @@ contract PoolTest is Test {
     cfg = new Config();
     mockLendingPool = new MockLendingPool();
 
-    poolContract = new Pool(percentage, address(mockLendingPool), address(cfg),address(mockLendingPool));
+    poolContract = new Slast();
+
+    poolContract.initialize(percentage, address(mockLendingPool), address(cfg),address(mockLendingPool));
+
     testToken = new MockToken("USDC", "USDC");
 
 
@@ -323,11 +327,17 @@ contract PoolTest is Test {
 
     address testAddress = address(0x126); 
 
+    Slast p = new Slast();
+
     vm.expectRevert();
-    new Pool(0,address(0),testAddress,testAddress);
+    p.initialize(0,address(0),testAddress,testAddress);
+
+    p = new Slast();
     vm.expectRevert();
-    new Pool(0,testAddress, address(0),testAddress);
+    p.initialize(0,testAddress, address(0),testAddress);
+
+    p = new Slast();
     vm.expectRevert();
-    new Pool(0,testAddress, testAddress,address(0));
+    p.initialize(0,testAddress, testAddress,address(0));
   }
 }
