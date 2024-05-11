@@ -4,17 +4,20 @@ pragma solidity >=0.8.23;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "forge-std/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import "./interfaces/Configuration.sol";
 import "./interfaces/Vault.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 
 event Deposit(address indexed from, address indexed token, uint256 amount);
 event Withdraw(address indexed from, address indexed token, uint256 amount);
 event Forward(address indexed from, address indexed recipient, address indexed token, uint256 amount);
 
-contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
+contract Pool is Initializable, OwnableUpgradeable , ReentrancyGuardUpgradeable, PausableUpgradeable {
 
     using Math for uint256;
 
@@ -54,10 +57,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
 
     Configuration _config;
 
-
-    constructor(uint256 _feePercentage, address _aavePool, 
-                address _configuration,
-                address _nativeGateway) {
+    function initialize(uint256 _feePercentage, address _aavePool, address _configuration, address _nativeGateway) initializer public {
 
       require(address(_aavePool) != address(0), "Aave pool vault cannot be a zero address"); 
       require(address(_configuration) != address(0), "Configurator address cannot be a zero address"); 
