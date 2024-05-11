@@ -77,6 +77,18 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
       _unpause();
     }
 
+    function getFee() external view returns (uint256) {
+      return feePercentage;
+    }
+
+    function balanceOf(address tokenAddress) public view returns (uint256) {
+      return userHoldings[msg.sender][tokenAddress];
+    }
+
+    function getNativeTokenBalance() public view returns (uint256)  {
+      return balanceOf(DEAD_ADDRESS);
+    }
+
     function calculatePercentage(uint256 amount, uint256 percentage) private pure returns (uint256) {
       return Math.mulDiv(amount, percentage, 10000);
     }
@@ -179,7 +191,7 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
       emit Deposit(msg.sender,tokenAddress,amount);
     }
 
-    function saveAndSpendToken(address tokenAddress, uint256 amount, address receiver) public {
+    function saveAndSpendToken(address tokenAddress, uint256 amount, address receiver) public whenNotPaused {
 
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
@@ -201,24 +213,12 @@ contract Pool is Ownable(msg.sender), ReentrancyGuard, Pausable {
      supply(tokenAddress, discountedPrice);
     }
 
-    function depositNativeToken() public payable {
+    function depositNativeToken() public payable whenNotPaused {
 
       userHoldings[msg.sender][DEAD_ADDRESS] = safeAdd(userHoldings[msg.sender][DEAD_ADDRESS],msg.value);
 
       _wethGateway.depositETH{value:msg.value}(address(_vaultAddress),address(this), 0);
 
       emit Deposit(msg.sender,DEAD_ADDRESS,msg.value);
-    }
-
-    function getFee() external view returns (uint256) {
-      return feePercentage;
-    }
-
-    function balanceOf(address tokenAddress) public view returns (uint256) {
-      return userHoldings[msg.sender][tokenAddress];
-    }
-
-    function getNativeTokenBalance() public view returns (uint256)  {
-      return balanceOf(DEAD_ADDRESS);
     }
 }
