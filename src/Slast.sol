@@ -179,16 +179,14 @@ contract Slast is Initializable, UUPSUpgradeable , OwnableUpgradeable, Reentranc
       require(tokenAddress != DEAD_ADDRESS, "You cannot provide a burn address");
       require(tokenAddress != address(0), "You cannot provide a burn address");
 
-
       uint256 balance = userHoldings[msg.sender][tokenAddress];
+
+      IERC20 assetContract = IERC20(tokenAddress);
+      assetContract.transferFrom(msg.sender,address(this),amount);
 
       userHoldings[msg.sender][tokenAddress] = safeAdd(balance,amount);
 
       if (_config.isSupported(tokenAddress)) {
-
-        IERC20 assetContract = IERC20(tokenAddress);
-        assetContract.transferFrom(msg.sender,address(this),amount);
-
         // no unlimted allowance to Slast. Only give allowances as needed
         assetContract.approve(address(_vaultAddress), amount);
         _vaultAddress.deposit(tokenAddress,amount,address(this),0);

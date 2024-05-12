@@ -77,7 +77,6 @@ contract PoolTest is Test {
 
     testToken = new MockToken("USDC", "USDC");
 
-
     cfg.addSupportedAsset(address(testToken));
   }
 
@@ -285,7 +284,6 @@ contract PoolTest is Test {
 
   function test_supply() public {
 
-
     address testAddress = address(0x126); 
 
     uint256 amountToSupply = 50 * (10 ** testToken.decimals());
@@ -308,10 +306,33 @@ contract PoolTest is Test {
     assertEq(testToken.balanceOf(address(poolContract)),amountToSupply);
   }
 
-  function test_supply_zero_address() public {
-
+  // this should not supply to Aave but the balance of the token should go up too
+  function test_supply_non_supported_asset() public {
 
     address testAddress = address(0x126); 
+
+    MockToken tt = new MockToken("TestUSDC", "USDC");
+
+    uint256 amountToSupply = 50 * (10 ** testToken.decimals());
+    tt.mint(testAddress, amountToSupply);
+
+    vm.startPrank(testAddress); 
+
+    tt.approve(address(poolContract), amountToSupply);
+
+    poolContract.supply(address(tt),amountToSupply);
+
+    assertEq(poolContract.balanceOf(address(tt)), amountToSupply);
+    vm.stopPrank(); 
+
+    // since we have drawn everything off
+    assertEq(tt.balanceOf(testAddress),0);
+
+    // make sure the contract has the correct and expected amount
+    assertEq(tt.balanceOf(address(poolContract)),amountToSupply);
+  }
+
+  function test_supply_zero_address() public {
 
     vm.expectRevert();
 
