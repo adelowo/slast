@@ -58,9 +58,8 @@ contract Slast is Initializable, UUPSUpgradeable , OwnableUpgradeable, Reentranc
     } 
 
     function initialize(uint256 _feePercentage, address _aavePool, address _configuration,address _nativeGateway) initializer public {
-
-      __UUPSUpgradeable_init();
       __Ownable_init(msg.sender);
+      __UUPSUpgradeable_init();
       __ReentrancyGuard_init();
       __Pausable_init();
 
